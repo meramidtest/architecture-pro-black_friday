@@ -1,0 +1,37 @@
+@startuml
+!include utils/C4_Context.puml
+!include utils/C4_Container.puml
+!include utils/C4_Component.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define DEVICONS2 https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons2
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!define MATERIAL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/material
+
+!include DEVICONS/python.puml
+!include DEVICONS2/mongodb_wordmark.puml
+!include MATERIAL/router.puml
+!include FONTAWESOME/users.puml
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+Person(api_client, "API Client", "Calls pymongo-api", $sprite="users")
+
+Container(pymongo_api, "pymongo-api", "Python, FastAPI + PyMongo", "REST API for MongoDB operations", $sprite="python")
+
+Container(mongorouter, "mongorouter", "mongos", "Routes requests to shards", $sprite="router")
+
+System_Boundary(mongo_cluster, "MongoDB Sharded Cluster") {
+    ContainerDb(shard1_primary, "Shard 1 Primary", "MongoDB", $sprite="mongodb_wordmark")
+    ContainerDb(shard2_primary, "Shard 2 Primary", "MongoDB", $sprite="mongodb_wordmark")
+}
+
+Rel_Down(api_client, pymongo_api, "HTTPS/JSON")
+Rel_Down(pymongo_api, mongorouter, "PyMongo")
+Rel_Down(mongorouter, shard1_primary, "Read/Write")
+Rel_Down(mongorouter, shard2_primary, "Read/Write")
+
+@enduml
+
+
