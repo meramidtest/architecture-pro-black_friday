@@ -1,0 +1,55 @@
+@startuml
+!include utils/C4_Context.puml
+!include utils/C4_Container.puml
+!include utils/C4_Component.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define DEVICONS2 https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons2
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!define MATERIAL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/material
+
+!include DEVICONS/python.puml
+!include DEVICONS2/mongodb_wordmark.puml
+!include MATERIAL/router.puml
+!include FONTAWESOME/users.puml
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+Person(api_client, "API Client", "Calls pymongo-api", $sprite="users")
+
+Container(pymongo_api_1, "pymongo-api", "pymongo-api (Python, FastAPI + PyMongo)", "Инстанс приложения pymongo-api", $sprite="python")
+
+Container(mongorouter_1, "mongorouter-1", "mongos (MongoDB router)", "Инстанс маршрутизатора mongos", $sprite="router")
+
+System_Boundary(mongo_cluster, "MongoDB Sharded Cluster") {
+    ContainerDb(configsrv_1, "configSrv-1", "MongoDB configSrv", "Инстанс конфигурационного сервера (primary)", $sprite="mongodb_wordmark")
+    ContainerDb(configsrv_2, "configSrv-2", "MongoDB configSrv", "Инстанс конфигурационного сервера (replica)", $sprite="mongodb_wordmark")
+    ContainerDb(configsrv_3, "configSrv-3", "MongoDB configSrv", "Инстанс конфигурационного сервера (replica)", $sprite="mongodb_wordmark")
+
+    ContainerDb(shard1_1, "shard1", "MongoDB shard", "Инстанс шарда 1 (primary)", $sprite="mongodb_wordmark")
+    ContainerDb(shard2_1, "shard2", "MongoDB shard", "Инстанс шарда 2 (primary)", $sprite="mongodb_wordmark")
+}
+
+' клиент → приложение
+Rel_Down(api_client, pymongo_api_1, "HTTPS/JSON")
+
+' приложение → mongorouter
+Rel_Down(pymongo_api_1, mongorouter_1, "PyMongo")
+
+' mongorouter → configSrv (метаданные шардинга)
+Rel_Right(mongorouter_1, configsrv_1, "Пишет/читает метаданные шардинга (только primary)")
+Rel_Right(mongorouter_1, configsrv_2, "Читает метаданные шардинга (replica)")
+Rel_Right(mongorouter_1, configsrv_3, "Читает метаданные шардинга (replica)")
+
+' mongorouter → шарды (данные)
+Rel_Down(mongorouter_1, shard1_1, "Read/Write")
+Rel_Down(mongorouter_1, shard2_1, "Read/Write")
+
+' репликация метаданных конфигурации
+Rel_Right(configsrv_1, configsrv_2, "Репликация метаданных конфигурации")
+Rel_Right(configsrv_2, configsrv_3, "Репликация метаданных конфигурации")
+
+@enduml
+
+
