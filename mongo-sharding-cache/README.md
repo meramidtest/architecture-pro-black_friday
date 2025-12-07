@@ -2,6 +2,11 @@
 
 ## Как запустить
 
+Перейти в директорию с проектом
+```
+cd ./mongo-sharding-cache
+```
+
 Запускаем mongodb и приложение
 
 ```shell
@@ -10,8 +15,9 @@ docker compose up -d
 
 Заполняем mongodb данными и Инициалазируем redis cluster
 
+[//]: # (./scripts/redis-init.sh)
+
 ```shell
-./scripts/redis-init.sh
 ./scripts/mongo-init.sh
 ```
 
@@ -26,3 +32,11 @@ docker compose up -d
 ## Посмотреть работу кеширования
 
 1. Сделать несколько запросов на http://localhost:8080/helloDoc/users и убедиться что последующие выполняются <= 5ms
+
+## Очистка окружения
+
+По завершению
+
+```shell
+docker compose down -v
+```

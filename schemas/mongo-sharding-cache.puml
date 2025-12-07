@@ -23,8 +23,6 @@ Container(pymongo_api, "pymongo_api", "pymongo_api (Python, FastAPI + PyMongo)",
 
 Container(mongos_router, "mongos_router", "mongos (MongoDB router)", "Сервис маршрутизатора mongos_router", $sprite="router")
 
-ContainerDb(redis, "redis", "Redis", "Сервис кеша Redis", $sprite="redis_wordmark")
-
 System_Boundary(mongo_cluster, "MongoDB Sharded Cluster") {
     ContainerDb(configSrv, "configSrv", "MongoDB configSrv", "Сервис конфигурационного сервера (primary)", $sprite="mongodb_wordmark")
     ContainerDb(configSrvReplica1, "configSrvReplica1", "MongoDB configSrv", "Сервис конфигурационного сервера (replica 1)", $sprite="mongodb_wordmark")
@@ -36,10 +34,22 @@ System_Boundary(mongo_cluster, "MongoDB Sharded Cluster") {
     ContainerDb(shard2Replica, "shard2Replica", "MongoDB shard", "Сервис шарда 2 (replica)", $sprite="mongodb_wordmark")
 }
 
+System_Boundary(redis_cluster, "Redis Cluster") {
+    ContainerDb(redis_1, "redis_1", "Redis", "Узел Redis 1", $sprite="redis_wordmark")
+    ContainerDb(redis_2, "redis_2", "Redis", "Узел Redis 2", $sprite="redis_wordmark")
+    ContainerDb(redis_3, "redis_3", "Redis", "Узел Redis 3", $sprite="redis_wordmark")
+    ContainerDb(redis_4, "redis_4", "Redis", "Узел Redis 4", $sprite="redis_wordmark")
+    ContainerDb(redis_5, "redis_5", "Redis", "Узел Redis 5", $sprite="redis_wordmark")
+    ContainerDb(redis_6, "redis_6", "Redis", "Узел Redis 6", $sprite="redis_wordmark")
+}
+
 Rel_Down(api_client, pymongo_api, "HTTPS/JSON")
 
-Rel_Down(pymongo_api, redis, "Кэширование данных")
 Rel_Down(pymongo_api, mongos_router, "PyMongo")
+
+Rel_Right(pymongo_api, redis_1, "Кэширование данных (master)")
+Rel_Right(pymongo_api, redis_2, "Кэширование данных (master)")
+Rel_Right(pymongo_api, redis_3, "Кэширование данных (master)")
 
 Rel_Right(mongos_router, configSrv, "Пишет/читает метаданные шардинга (primary)")
 Rel_Right(mongos_router, configSrvReplica1, "Читает метаданные шардинга (replica 1)")
@@ -54,6 +64,10 @@ Rel_Right(shard1, shard1Replica, "Replication")
 Rel_Right(shard2, shard2Replica, "Replication")
 Rel_Right(configSrv, configSrvReplica1, "Репликация метаданных конфигурации")
 Rel_Right(configSrvReplica1, configSrvReplica2, "Репликация метаданных конфигурации")
+
+Rel_Right(redis_1, redis_4, "Replication / Cluster")
+Rel_Right(redis_2, redis_5, "Replication / Cluster")
+Rel_Right(redis_3, redis_6, "Replication / Cluster")
 
 @enduml
 
