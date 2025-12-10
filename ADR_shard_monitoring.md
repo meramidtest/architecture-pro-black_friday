@@ -64,6 +64,43 @@ db.getSiblingDB("config").settings.updateOne(
 )
 ```
 
+---
+
+## 3. Зонированное шардирование для разгрузки горячих шардов
+
+### Решение: Zoned tag sharding
+
+```javascript
+sh.addShardTag("shard1", "electronics_zone_1")
+sh.addShardTag("shard2", "electronics_zone_2")
+sh.addShardTag("shard3", "other_categories")
+
+db.products.createIndex({ category: 1 })
+sh.shardCollection("somedb.products", { category: 1 })
+
+sh.addTagRange(
+  "somedb.products",
+  { category: "electronics" },
+  { category: "electronics" },
+  "electronics_zone"
+)
+
+sh.addTagRange(
+  "somedb.products",
+  { category: MinKey },
+  { category: "electronics" },
+  "other_categories"
+)
+
+sh.addTagRange(
+  "somedb.products",
+  { category: "electronics" },
+  { category: MaxKey },
+  "other_categories"
+)
+```
+
+
 ## Примененые решения
 
 | Компонент        | Решение                                |
@@ -72,4 +109,5 @@ db.getSiblingDB("config").settings.updateOne(
 | Автобалансировка | Встроенный балансировщик MongoDB       |
 | Окно балансировки | 0200-06:00                             |
 | Размер чанка     | 64MB                                   |
+| Горячие категории  | Zoned tag sharding         |
 
