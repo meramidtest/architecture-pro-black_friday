@@ -1,0 +1,30 @@
+@startuml
+!include utils/C4_Context.puml
+!include utils/C4_Container.puml
+!include utils/C4_Component.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define DEVICONS2 https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons2
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!define MATERIAL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/material
+
+!include DEVICONS/python.puml
+!include DEVICONS2/mongodb_wordmark.puml
+!include MATERIAL/router.puml
+!include FONTAWESOME/users.puml
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+Person(api_client, "API Client", "Calls pymongo-api", $sprite="users")
+
+Container(pymongo_api_1, "pymongo-api-1", "pymongo-api (Python, FastAPI + PyMongo)", "Инстанс приложения pymongo-api", $sprite="python")
+
+ContainerDb(mongodb1_1, "mongodb1", "MongoDB", "Инстанс базы данных MongoDB", $sprite="mongodb_wordmark")
+
+Rel_Down(api_client, pymongo_api_1, "HTTPS/JSON")
+Rel_Down(pymongo_api_1, mongodb1_1, "Read/Write")
+
+@enduml
+
+

@@ -1,0 +1,60 @@
+@startuml
+!include utils/C4_Context.puml
+!include utils/C4_Container.puml
+!include utils/C4_Component.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define DEVICONS2 https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons2
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!define MATERIAL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/material
+
+!include DEVICONS/python.puml
+!include DEVICONS2/mongodb_wordmark.puml
+!include DEVICONS2/redis_wordmark.puml
+!include MATERIAL/router.puml
+!include FONTAWESOME/users.puml
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+Person(api_client, "API Client", "Calls pymongo-api", $sprite="users")
+
+Container(pymongo_api, "pymongo_api", "pymongo_api (Python, FastAPI + PyMongo)", "Сервис приложения pymongo_api (FastAPI + PyMongo)", $sprite="python")
+
+Container(mongos_router, "mongos_router", "mongos (MongoDB router)", "Сервис маршрутизатора mongos_router", $sprite="router")
+
+ContainerDb(redis, "redis", "Redis", "Сервис кеша Redis", $sprite="redis_wordmark")
+
+System_Boundary(mongo_cluster, "MongoDB Sharded Cluster") {
+    ContainerDb(configSrv, "configSrv", "MongoDB configSrv", "Сервис конфигурационного сервера (primary)", $sprite="mongodb_wordmark")
+    ContainerDb(configSrvReplica1, "configSrvReplica1", "MongoDB configSrv", "Сервис конфигурационного сервера (replica 1)", $sprite="mongodb_wordmark")
+    ContainerDb(configSrvReplica2, "configSrvReplica2", "MongoDB configSrv", "Сервис конфигурационного сервера (replica 2)", $sprite="mongodb_wordmark")
+
+    ContainerDb(shard1, "shard1", "MongoDB shard", "Сервис шарда 1 (primary)", $sprite="mongodb_wordmark")
+    ContainerDb(shard1Replica, "shard1Replica", "MongoDB shard", "Сервис шарда 1 (replica)", $sprite="mongodb_wordmark")
+    ContainerDb(shard2, "shard2", "MongoDB shard", "Сервис шарда 2 (primary)", $sprite="mongodb_wordmark")
+    ContainerDb(shard2Replica, "shard2Replica", "MongoDB shard", "Сервис шарда 2 (replica)", $sprite="mongodb_wordmark")
+}
+
+Rel_Down(api_client, pymongo_api, "HTTPS/JSON")
+
+Rel_Down(pymongo_api, redis, "Кэширование данных")
+Rel_Down(pymongo_api, mongos_router, "PyMongo")
+
+Rel_Right(mongos_router, configSrv, "Пишет/читает метаданные шардинга (primary)")
+Rel_Right(mongos_router, configSrvReplica1, "Читает метаданные шардинга (replica 1)")
+Rel_Right(mongos_router, configSrvReplica2, "Читает метаданные шардинга (replica 2)")
+
+Rel_Down(mongos_router, shard1, "Read/Write")
+Rel_Down(mongos_router, shard2, "Read/Write")
+Rel_Down(mongos_router, shard1Replica, "Read")
+Rel_Down(mongos_router, shard2Replica, "Read")
+
+Rel_Right(shard1, shard1Replica, "Replication")
+Rel_Right(shard2, shard2Replica, "Replication")
+Rel_Right(configSrv, configSrvReplica1, "Репликация метаданных конфигурации")
+Rel_Right(configSrvReplica1, configSrvReplica2, "Репликация метаданных конфигурации")
+
+@enduml
+
+
